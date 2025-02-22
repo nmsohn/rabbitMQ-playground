@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AuctionService.Data.Migrations
 {
     [DbContext(typeof(AuctionDbContext))]
-    [Migration("20250221005145_InitialCreate")]
+    [Migration("20250222092721_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -40,7 +40,7 @@ namespace AuctionService.Data.Migrations
                     b.Property<decimal?>("CurrentHighBid")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal?>("ReservePrice")
+                    b.Property<decimal>("ReservePrice")
                         .HasColumnType("numeric");
 
                     b.Property<string>("Seller")
@@ -73,22 +73,18 @@ namespace AuctionService.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Color")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Make")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Mileage")
                         .HasColumnType("integer");
 
                     b.Property<string>("Model")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Year")
@@ -115,8 +111,7 @@ namespace AuctionService.Data.Migrations
 
             modelBuilder.Entity("AuctionService.Entities.Auction", b =>
                 {
-                    b.Navigation("Item")
-                        .IsRequired();
+                    b.Navigation("Item");
                 });
 #pragma warning restore 612, 618
         }

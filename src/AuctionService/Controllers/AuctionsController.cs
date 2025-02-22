@@ -2,6 +2,7 @@ using AuctionService.Data;
 using AuctionService.Dtos;
 using AuctionService.Entities;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,18 +13,27 @@ namespace AuctionService.Controllers;
 public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions()
+    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions([FromQuery] string date)
     {
-        var auctions = await auctionDbContext.Auctions
-            .Include(x => x.Item)
-            .OrderBy(x => x.Item.Make)
-            .ToListAsync();
+        var query = auctionDbContext.Auctions.OrderBy(x => x.Item!.Make).AsQueryable();
+
+        if (!string.IsNullOrEmpty(date))
+        {
+            query = query.Where(x => x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) >= 0);
+        }
+
+        return await query.ProjectTo<AuctionDto>(mapper.ConfigurationProvider).ToListAsync();
         
-        return mapper.Map<List<AuctionDto>>(auctions);
+        // var auctions = await auctionDbContext.Auctions
+        //     .Include(x => x.Item)
+        //     .OrderBy(x => x.Item!.Make)
+        //     .ToListAsync();
+        //
+        // return mapper.Map<List<AuctionDto>>(auctions);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<AuctionDto>> GetAuctionById(Guid id)
+    public async Task<ActionResult<AuctionDto>> GetAuctionById([FromRoute] Guid id)
     {
         //Find vs FirstOrDeafult
         var auction = await auctionDbContext.Auctions
@@ -39,7 +49,7 @@ public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mappe
     }
 
     [HttpPost]
-    public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto createAuctionDto)
+    public async Task<ActionResult<AuctionDto>> CreateAuction([FromBody] CreateAuctionDto createAuctionDto)
     {
         var auction = mapper.Map<Auction>(createAuctionDto);
         //TODO: Add current user as a seller
@@ -58,7 +68,7 @@ public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mappe
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
+    public async Task<ActionResult> UpdateAuction([FromRoute] Guid id, [FromBody] UpdateAuctionDto updateAuctionDto)
     {
         //TODO: check seller
         
@@ -83,7 +93,7 @@ public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mappe
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteAuction(Guid id)
+    public async Task<ActionResult> DeleteAuction([FromRoute] Guid id)
     {
         //TODO: check seller
 

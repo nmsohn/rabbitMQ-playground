@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchService", "src\SearchService\SearchService.csproj", "{9081F535-23B6-4B38-A03F-396FF3859348}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,8 +27,13 @@ Global
 		{8C8EC560-8DE7-488A-B2FC-67A43147B9FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C8EC560-8DE7-488A-B2FC-67A43147B9FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C8EC560-8DE7-488A-B2FC-67A43147B9FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9081F535-23B6-4B38-A03F-396FF3859348}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9081F535-23B6-4B38-A03F-396FF3859348}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9081F535-23B6-4B38-A03F-396FF3859348}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9081F535-23B6-4B38-A03F-396FF3859348}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8C8EC560-8DE7-488A-B2FC-67A43147B9FC} = {D7548FE9-6FC7-4EFE-BC8C-A7FBDAC5BB88}
+		{9081F535-23B6-4B38-A03F-396FF3859348} = {D7548FE9-6FC7-4EFE-BC8C-A7FBDAC5BB88}
 	EndGlobalSection
 EndGlobal

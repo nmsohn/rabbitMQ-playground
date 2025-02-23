@@ -3,6 +3,8 @@ using AuctionService.Dtos;
 using AuctionService.Entities;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,26 +12,26 @@ namespace AuctionService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mapper) : ControllerBase
+public class AuctionsController(
+    AuctionDbContext auctionDbContext, 
+    IMapper mapper, 
+    IPublishEndpoint publishEndpoint) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions([FromQuery] string date)
+    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions([FromQuery] string? date)
     {
-        var query = auctionDbContext.Auctions.OrderBy(x => x.Item!.Make).AsQueryable();
+        var query = auctionDbContext.Auctions
+            .OrderBy(x => x.Item!.Make)
+            .AsQueryable();
 
         if (!string.IsNullOrEmpty(date))
         {
             query = query.Where(x => x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) >= 0);
         }
 
-        return await query.ProjectTo<AuctionDto>(mapper.ConfigurationProvider).ToListAsync();
-        
-        // var auctions = await auctionDbContext.Auctions
-        //     .Include(x => x.Item)
-        //     .OrderBy(x => x.Item!.Make)
-        //     .ToListAsync();
-        //
-        // return mapper.Map<List<AuctionDto>>(auctions);
+        return await query
+            .ProjectTo<AuctionDto>(mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
     [HttpGet("{id}")]
@@ -58,13 +60,19 @@ public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mappe
         auctionDbContext.Auctions.Add(auction); //memory
         
         var result = await auctionDbContext.SaveChangesAsync() > 0;
+        
+        var auctionResponse = mapper.Map<AuctionDto>(auction);
+        var auctionCreated = mapper.Map<AuctionCreated>(auctionResponse);
+        await publishEndpoint.Publish(auctionCreated);
 
         if (!result)
         {
             return BadRequest("Could not create auction in DB");
         }
         
-        return CreatedAtAction(nameof(GetAuctionById), new { id = auction.Id }, mapper.Map<AuctionDto>(auction));
+        return CreatedAtAction(nameof(GetAuctionById), 
+            new { id = auction.Id }, 
+            auctionResponse);
     }
 
     [HttpPut("{id}")]
@@ -81,8 +89,10 @@ public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mappe
             return NotFound();
         }
         
-        var updated = mapper.Map(updateAuctionDto, auction); //how does it handle guid?
+        var updated = mapper.Map(updateAuctionDto, auction);
         auction = updated;
+        
+        await publishEndpoint.Publish<AuctionUpdated>(mapper.Map<AuctionUpdated>(auction));
         
         var result = await auctionDbContext.SaveChangesAsync() > 0;
         if (!result)
@@ -104,6 +114,9 @@ public class AuctionsController(AuctionDbContext auctionDbContext, IMapper mappe
         }
         
         auctionDbContext.Auctions.Remove(auction);
+
+        await publishEndpoint.Publish<AuctionDeleted>(new { Id = auction.Id.ToString() });
+        
         var result = await auctionDbContext.SaveChangesAsync() > 0;
         if (!result)
         {

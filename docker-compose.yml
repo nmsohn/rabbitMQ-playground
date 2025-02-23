@@ -10,7 +10,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - /var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
   search-db:
     image: mongo
     container_name: search-db
@@ -22,7 +22,14 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - /data/db
-#volumes:
-#  pgdata:
-#  mongodata:
+      - mongodata:/data/db
+  event-bus:
+    image: rabbitmq:4.0.6-management-alpine #gui, lightweight
+    container_name: event-bus
+    restart: unless-stopped
+    ports:
+      - 5672:5672
+      - 15672:15672 #browser gui
+volumes:
+  pgdata:
+  mongodata:
